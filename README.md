@@ -7,7 +7,6 @@ class AttendanceApp:
     def __init__(self, root):  # Исправлено: __init__ вместо init
         self.root = root
         self.root.title("Учет пропусков занятий")
-
         # Создание бд
         self.conn = sqlite3.connect('attendance.db')
         self.cursor = self.conn.cursor()
