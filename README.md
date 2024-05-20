@@ -4,7 +4,7 @@ import sqlite3
 
 
 class AttendanceApp:
-    def __init__(self, root):  # Исправлено: __init__ вместо init
+    def __init__(self, root): 
         self.root = root
         self.root.title("Учет пропусков занятий")
         
