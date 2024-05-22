@@ -1,9 +1,9 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
-import sqlite3
+    import tkinter as tk
+    from tkinter import ttk, messagebox
+    import sqlite3
 
 
-class AttendanceApp:
+    class AttendanceApp:
     def __init__(self, root): 
         self.root = root
         self.root.title("Учет пропусков занятий")
