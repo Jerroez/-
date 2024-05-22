@@ -1,0 +1,215 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+import sqlite3
+from tkcalendar import DateEntry
+from tkinter import PhotoImage
+from PIL import Image, ImageTk
+
+class AttendanceApp:
+    def __init__(self, root):
+
+        self.root = root
+        self.root.title("Учет пропусков занятий")
+
+
+        # Создание бд
+        self.conn = sqlite3.connect('attendance.db')
+        self.cursor = self.conn.cursor()
+        self.create_tables()
+
+        # Фрейм для выбора группы
+        self.group_frame = ttk.Frame(self.root)
+        self.group_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
+
+
+        ttk.Label(self.group_frame, text="Группа:").grid(row=0, column=0, sticky='w')
+        self.group_var = tk.StringVar(value='group1')
+        ttk.Radiobutton(self.group_frame, text="ИСТ-311", variable=self.group_var, value='group1', command=self.update_table).grid(row=1, column=0, sticky='w')
+        ttk.Radiobutton(self.group_frame, text="ПРИ-311", variable=self.group_var, value='group2', command=self.update_table).grid(row=2, column=0, sticky='w')
+
+        # Фрейм для ввода данных о пропусках
+        self.input_frame = ttk.Frame(self.root)
+        self.input_frame.grid(row=1, column=0, padx=10, pady=10, sticky='nsew')
+        ttk.Label(self.input_frame, text="Дата пропуска (гггг-мм-дд):").grid(row=1, column=0, sticky='w')
+
+        # Загрузка логотипа компании
+        self.logo_image = Image.open("LOGO.png")
+        self.logo_image = self.logo_image.resize((100, 100), Image.ANTIALIAS)
+        self.logo_photo = ImageTk.PhotoImage(self.logo_image)
+        self.logo_label = ttk.Label(self.root, image=self.logo_photo)
+        self.logo_label.grid(row=0, column=1, padx=10, pady=10, sticky='n')
+
+
+        ttk.Label(self.input_frame, text="ФИО студента:").grid(row=0, column=0, sticky='w')
+        self.student_name_entry = ttk.Entry(self.input_frame)
+        self.student_name_entry.grid(row=0, column=1, sticky='w')
+
+        self.date_entry = DateEntry(self.input_frame, date_pattern='yyyy-mm-dd')
+        self.date_entry.grid(row=1, column=1, sticky='w')
+
+        # Выпадающий список "уважительный/неуважительный"
+        ttk.Label(self.input_frame, text="Причина пропуска:").grid(row=2, column=0, sticky='w')
+        self.reason_var = tk.StringVar(value='неуважительная')
+        self.reason_combobox = ttk.Combobox(self.input_frame, textvariable=self.reason_var, values=['уважительная', 'неуважительная'])
+        self.reason_combobox.grid(row=2, column=1, sticky='w')
+
+        ttk.Button(self.input_frame, text="Добавить пропуск", command=self.add_attendance).grid(row=3, column=0, columnspan=2)
+
+        # Фрейм для таблицы
+        self.table_frame = ttk.Frame(self.root)
+        self.table_frame.grid(row=2, column=0, padx=10, pady=10, sticky='nsew')
+
+        self.tree = ttk.Treeview(self.table_frame, columns=("id", "student_name", "date", "reason"), show="headings")
+        self.tree.heading("id", text="ID")
+        self.tree.heading("student_name", text="Имя студента")
+        self.tree.heading("date", text="Дата пропуска")
+        self.tree.heading("reason", text="Тип пропуска")
+        self.tree.grid(row=0, column=0, sticky='nsew')
+
+        self.tree.bind("<<TreeviewSelect>>", self.on_tree_select)
+
+        # Кнопки для редактирования и удаления
+        self.edit_button = ttk.Button(self.table_frame, text="Редактировать", command=self.edit_attendance, state='disabled')
+        self.edit_button.grid(row=1, column=0, sticky='w')
+
+        self.delete_button = ttk.Button(self.table_frame, text="Удалить", command=self.delete_attendance, state='disabled')
+        self.delete_button.grid(row=1, column=1, sticky='w')
+
+        # Загружаем данные в таблицу при запуске
+        self.update_table()
+
+    def create_tables(self):
+        """Создает таблицы в базе данных, если их еще нет."""
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS group1 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_name TEXT,
+                date TEXT,
+                reason TEXT
+            )
+        ''')
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS group2 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_name TEXT,
+                date TEXT,
+                reason TEXT
+            )
+        ''')
+        self.conn.commit()
+
+    def add_attendance(self):
+        student_name = self.student_name_entry.get()
+        date = self.date_entry.get()
+        reason = self.reason_var.get()  # Получаем значение из выпадающего списка
+        group = self.group_var.get()
+
+        if student_name and date:
+            try:
+                self.cursor.execute(f'INSERT INTO {group} (student_name, date, reason) VALUES (?, ?, ?)',
+                                    (student_name, date, reason))
+                self.conn.commit()
+                messagebox.showinfo("Готово", "Данные о пропуске добавлены")
+                self.student_name_entry.delete(0, tk.END)
+                self.date_entry.delete(0, tk.END)
+                self.reason_var.set('неуважительный')  # Сбрасываем выпадающий список
+                self.update_table()
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось добавить пропуск: {e}")
+        else:
+            messagebox.showerror("Ошибка", "Заполните все поля")
+
+    def update_table(self):
+        """Обновляет данные в таблице."""
+        group = self.group_var.get()
+        self.tree.delete(*self.tree.get_children())
+        self.cursor.execute(f'SELECT * FROM {group}')
+        for row in self.cursor.fetchall():
+            self.tree.insert("", tk.END, values=(row[0], row[1], row[2], row[3]))
+
+    def on_tree_select(self, event):
+        """Обрабатывает событие выбора строки в таблице."""
+        selection = self.tree.selection()
+        if selection:
+            item = self.tree.item(selection[0])
+            self.edit_button['state'] = 'normal'
+            self.delete_button['state'] = 'normal'
+        else:
+            self.edit_button['state'] = 'disabled'
+            self.delete_button['state'] = 'disabled'
+
+    def edit_attendance(self):
+        """Редактирует выбранную запись в таблице."""
+        selection = self.tree.selection()
+        if selection:
+            item = self.tree.item(selection[0])
+            id = item['values'][0]
+            group = self.group_var.get()
+            self.cursor.execute(f'SELECT * FROM {group} WHERE id=?', (id,))
+            data = self.cursor.fetchone()
+            if data:
+                # Заполняем поля ввода данными из записи
+                self.student_name_entry.delete(0, tk.END)
+                self.student_name_entry.insert(0, data[1])
+                self.date_entry.delete(0, tk.END)
+                self.date_entry.insert(0, data[2])
+                self.reason_var.set(data[3])  # Устанавливаем значение выпадающего списка
+
+                # Функция для сохранения изменений
+                def save_changes():
+                    new_student_name = self.student_name_entry.get()
+                    new_date = self.date_entry.get()
+                    new_reason = self.reason_var.get()
+                    if new_student_name and new_date:
+                        try:
+                            self.cursor.execute(f'UPDATE {group} SET student_name=?, date=?, reason=? WHERE id=?',
+                                                (new_student_name, new_date, new_reason, id))
+                            self.conn.commit()
+                            messagebox.showinfo("Готово", "Изменения сохранены")
+                            self.update_table()
+                            self.edit_button['state'] = 'disabled'
+                            self.delete_button['state'] = 'disabled'
+                        except Exception as e:
+                            messagebox.showerror("Ошибка", f"Не удалось сохранить изменения: {e}")
+
+
+                # Создаем окно для редактирования
+                edit_window = tk.Toplevel(self.root)
+                edit_window.title("Редактирование пропуска")
+                ttk.Label(edit_window, text="Имя студента:").grid(row=0, column=0, sticky='w')
+                ttk.Entry(edit_window, textvariable=tk.StringVar(value=data[1])).grid(row=0, column=1, sticky='w')
+                ttk.Label(edit_window, text="Дата пропуска:").grid(row=1, column=0, sticky='w')
+                date_entry = DateEntry(edit_window, textvariable=tk.StringVar(value=data[2]), date_pattern='yyyy-mm-dd')
+                date_entry.grid(row=1, column=1, sticky='w')
+                ttk.Label(edit_window, text="Причина пропуска:").grid(row=2, column=0, sticky='w')
+                ttk.Combobox(edit_window, textvariable=tk.StringVar(value=data[3]), values=['уважительная', 'неуважительная']).grid(row=2, column=1, sticky='w')
+                ttk.Button(edit_window, text="Сохранить", command=save_changes).grid(row=3, column=0, columnspan=2)
+            else:
+                messagebox.showerror("Ошибка", "Запись не найдена")
+        else:
+            messagebox.showerror("Ошибка", "Выберите запись для редактирования")
+
+    def delete_attendance(self):
+        """Удаляет выбранную запись в таблице."""
+        selection = self.tree.selection()
+        if selection:
+            item = self.tree.item(selection[0])
+            id = item['values'][0]
+            group = self.group_var.get()
+            if messagebox.askyesno("Подтверждение", "Вы уверены, что хотите удалить эту запись?"):
+                try:
+                    self.cursor.execute(f'DELETE FROM {group} WHERE id=?', (id,))
+                    self.conn.commit()
+                    self.update_table()
+                    self.edit_button['state'] = 'disabled'
+                    self.delete_button['state'] = 'disabled'
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось удалить запись: {e}")
+        else:
+            messagebox.showerror("Ошибка", "Выберите запись для удаления")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = AttendanceApp(root)
+    root.mainloop()
+
