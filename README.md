@@ -1,10 +1,10 @@
 
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget, QTableWidget, \
+    import sys
+    from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget, QTableWidget, \
     QTableWidgetItem, QLabel, QPushButton, QLineEdit, QMessageBox, QComboBox, QCalendarWidget
 
 
-class ElectronicJournalApp(QMainWindow):
+    class ElectronicJournalApp(QMainWindow):
     def init(self):
         super().init()
 
@@ -18,10 +18,10 @@ class ElectronicJournalApp(QMainWindow):
 
     def initUI(self):
         main_layout = QVBoxLayout()
-        # Прозрачность окна
+        
         self.setWindowOpacity(0.91)
         
-        # Создание полей
+        
         self.group_combo = QComboBox()
         self.group_combo.addItem("ИСТ-311")
         self.group_combo.addItem("ПИ-311")
@@ -44,20 +44,16 @@ class ElectronicJournalApp(QMainWindow):
         view_attendance_button.clicked.connect(self.view_attendance)
 
         mark_attendance_button = QPushButton("Отметить посещаемость")
-        add_student_button = QPushButton("Добавить студента")
-        remove_student_button = QPushButton("Удалить студента")
         save_date = QPushButton('Сохранить')
         save_date.clicked.connect(self.save_data)
 
         main_layout.addWidget(self.group_combo)
         main_layout.addWidget(self.subject_combo)
         main_layout.addWidget(self.calendar)
-        main_layout.addWidget(view_group_button)  # Кнопка "Просмотр группы"
+        main_layout.addWidget(view_group_button)  
         main_layout.addWidget(self.attendance_table)
         main_layout.addWidget(mark_attendance_button)
-        main_layout.addWidget(add_student_button)
-        main_layout.addWidget(remove_student_button)
-        main_layout.addWidget(view_attendance_button)  # Кнопка "Просмотр посещаемости"
+        main_layout.addWidget(view_attendance_button)  
         main_layout.addWidget(save_date)
 
         main_widget = QWidget()
@@ -76,24 +72,24 @@ class ElectronicJournalApp(QMainWindow):
             QMessageBox.warning(self, "Ошибка", "Файл attendance.txt не найден!")
             return
 
-        self.attendance_table.clearContents()  # Очищаем таблицу
+        self.attendance_table.clearContents() 
         row_index = 0
         for line in lines:
             if line.startswith(f"Группа: {group} Предмет: {subject}"):
-                for line in lines[row_index + 3:]:  # Пропускаем 3 строки (заголовок)
-                    if not line.strip():  # Пустая строка - конец данных
+                for line in lines[row_index + 3:]:  
+                    if not line.strip():  
                         break
                     last_name, first_name, patronymic, attendance = line.strip().split("\t")
-                    self.attendance_table.insertRow(row_index)  # Вставляем новую строку
+                    self.attendance_table.insertRow(row_index)  
                     self.attendance_table.setItem(row_index, 0, QTableWidgetItem(last_name))
                     self.attendance_table.setItem(row_index, 1, QTableWidgetItem(first_name))
                     self.attendance_table.setItem(row_index, 2, QTableWidgetItem(patronymic))
                     self.attendance_table.setItem(row_index, 3, QTableWidgetItem(attendance))
                     row_index += 1
-                break  # Выходим из цикла после обработки данных группы/предмета
+                break  
             row_index += 1
-def load_students_data(self):
-        """Загружает данные о студентах из файла students.txt."""
+    def load_students_data(self):
+        
         try:
             with open("students.txt", "r", encoding='utf-8') as f:
                 for line in f:
@@ -105,7 +101,7 @@ def load_students_data(self):
             QMessageBox.warning(self, "Ошибка", "Файл students.txt не найден!")
 
     def view_group(self):
-        """Отображает студентов выбранной группы в таблице."""
+        
         group = self.group_combo.currentText()
         self.attendance_table.clearContents()  # Очищаем таблицу
         if group in self.students_data:
@@ -119,7 +115,7 @@ def load_students_data(self):
     def save_data(self):
         group = self.group_combo.currentText()
         subject = self.subject_combo.currentText()
-        date = self.calendar.selectedDate().toString("dd MMMM")  # Получаем дату из календаря
+        date = self.calendar.selectedDate().toString("dd MMMM")  
         data = [f"Группа: {group}\n", f"Предмет: {subject}\n", f"Дата: {date}\n\n"]
 
         flag = False
@@ -146,7 +142,7 @@ def load_students_data(self):
             QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить данные: {str(e)}")
 
 
-if name == 'main':
+    if name == 'main':
     app = QApplication(sys.argv)
 
     journal_app = ElectronicJournalApp()
