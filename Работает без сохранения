@@ -1,0 +1,75 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget, QTableWidget, \
+    QTableWidgetItem, QLabel, QPushButton, QLineEdit, QMessageBox, QComboBox
+
+
+class ElectronicJournalApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Журнал Пропусков")
+        self.setGeometry(100, 100, 800, 600)
+
+        self.initUI()
+
+    def initUI(self):
+        main_layout = QVBoxLayout()
+
+        # Создание полей
+        group_combo = QComboBox()
+        group_combo.addItem("ИСТ-311")
+        group_combo.addItem("ПИ-311")
+
+        subject_combo = QComboBox()
+        subject_combo.addItem("Математика")
+        subject_combo.addItem("Физика")
+        subject_combo.addItem("История России")
+
+        date_combo = QComboBox()
+        date_combo.addItem("24 мая")
+
+
+        attendance_table = QTableWidget()
+        attendance_table.setRowCount(10)
+        attendance_table.setColumnCount(4)
+        attendance_table.setHorizontalHeaderLabels(["Фамилия", "Имя", "Отчество", "Пропуск"])
+
+
+
+        students = [("Лиманский", "Влад", "Александрович"), ("Долгушева", "Софья", "Максимовна"), ("Каплунова", "Кристина", "Александровна")]
+        for row, student in enumerate(students):
+            for col, data in enumerate(student):
+                if col == 3:
+                    item = QTableWidgetItem()
+                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    item.setCheckState(QtCore.Qt.Unchecked)
+                else:
+                    item = QTableWidgetItem(data)
+
+                attendance_table.setItem(row, col, item)
+
+
+        mark_attendance_button = QPushButton("Отметить посещаемость")
+        add_student_button = QPushButton("Добавить студента")
+        remove_student_button = QPushButton("Удалить студента")
+        save_date = QPushButton('Сохранить')
+
+        main_layout.addWidget(group_combo)
+        main_layout.addWidget(subject_combo)
+        main_layout.addWidget(date_combo)
+        main_layout.addWidget(attendance_table)
+        main_layout.addWidget(mark_attendance_button)
+        main_layout.addWidget(add_student_button)
+        main_layout.addWidget(remove_student_button)
+        main_layout.addWidget(save_date)
+
+        main_widget = QWidget()
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    journal_app = ElectronicJournalApp()
+    journal_app.show()
+    sys.exit(app.exec_())
