@@ -1,0 +1,106 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QTableWidget, QTableWidgetItem, QComboBox, QPushButton, QMessageBox
+from PyQt5.QtCore import Qt
+
+class ElectronicJournalApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Журнал Пропусков")
+        self.setGeometry(100, 100, 800, 600)
+
+        self.initUI()
+
+    def initUI(self):
+        main_layout = QVBoxLayout()
+
+        # Создание полей
+        self.group_combo = QComboBox()
+        self.group_combo.addItem("ИСТ-311")
+        self.group_combo.addItem("ПИ-311")
+
+        self.subject_combo = QComboBox()
+        self.subject_combo.addItem("Математика")
+        self.subject_combo.addItem("Физика")
+        self.subject_combo.addItem("История России")
+
+        self.date_combo = QComboBox()
+        self.date_combo.addItem("24 мая")
+
+        self.attendance_table = QTableWidget()
+        self.attendance_table.setRowCount(10)
+        self.attendance_table.setColumnCount(4)
+        self.attendance_table.setHorizontalHeaderLabels(["Фамилия", "Имя", "Отчество", "Пропуск"])
+        self.attendance_table.setColumnWidth(3, 50)
+        self.attendance_table.cellChanged(self.cell_changed)
+
+        students = [("Лиманский", "Влад", "Александрович"), ("Долгушева", "Софья", "Максимовна"), ("Каплунова", "Кристина", "Александровна")]
+        self.load_students(students)
+
+        self.mark_attendance_button = QPushButton("Отметить посещаемость")
+        self.mark_attendance_button.clicked(self.mark_attendance)
+
+        self.add_student_button = QPushButton("Добавить студента")
+        self.add_student_button.clicked(self.add_student)
+
+        self.remove_student_button = QPushButton("Удалить студента")
+        self.remove_student_button.clicked(self.remove_student)
+
+        self.save_button = QPushButton("Сохранить")
+        self.save_button.clicked(self.save_data)
+
+        main_layout.addWidget(self.group_combo)
+        main_layout.addWidget(self.subject_combo)
+        main_layout.addWidget(self.date_combo)
+        main_layout.addWidget(self.attendance_table)
+        main_layout.addWidget(self.mark_attendance_button)
+        main_layout.addWidget(self.add_student_button)
+        main_layout.addWidget(self.remove_student_button)
+        main_layout.addWidget(self.save_button)
+
+        main_widget = QWidget()
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
+
+    def load_students(self, students):
+        for row, student in enumerate(students):
+            for col, data in enumerate(student):
+                item = QTableWidgetItem(data if col != 3 else "")
+                if col == 3:
+                    item.setFlags(item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                    item.setCheckState(Qt.Unchecked)
+                self.attendance_table.setItem(row, col, item)
+
+    def cell_changed(self, row, column):
+        if column == 3:
+            item = self.attendance_table.item(row, column)
+            item.setData(Qt.EditRole, "Отсутствует" if item.checkState() == Qt.Checked else "Присутствует")
+
+    def mark_attendance(self):
+        selected_date = self.date_combo.currentText()
+        selected_group = self.group_combo.currentText()
+        selected_subject = self.subject_combo.currentText()
+
+        if not selected_date or not selected_group or not selected_subject:
+            QMessageBox.warning(self, "Ошибка", "Заполните все поля!")
+            return
+
+        QMessageBox.information(self, "Успешно", f"Посещаемость за {selected_date} для группы {selected_group} по предмету {selected_subject} сохранена!")
+
+
+
+    def save_data(self):
+        with open("attendance_data.txt", "w") as file:
+            for row in range(self.attendance_table.rowCount()):
+                for col in range(self.attendance_table.columnCount()):
+                    item = self.attendance_table.item(row, col)
+                    file.write(item.data(Qt.EditRole) if item else "")
+                    file.write(";")
+                file.write("\n")
+        QMessageBox.information(self, "Успешно", "Данные сохранены")
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    journal_app = ElectronicJournalApp()
+    journal_app.show()
+    sys.exit(app.exec_())
