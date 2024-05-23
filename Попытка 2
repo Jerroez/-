@@ -1,0 +1,199 @@
+Aleksandr, [23.05.2024 21:54]
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget, QTableWidget, \
+    QTableWidgetItem, QLabel, QPushButton, QLineEdit, QMessageBox, QComboBox
+from PyQt5 import QtCore
+
+class ElectronicJournalApp(QMainWindow):
+    def init(self):
+        super().init()
+
+        self.setWindowTitle("Журнал Пропусков")
+        self.setGeometry(100, 100, 800, 600)
+
+        self.initUI()
+
+    def initUI(self):
+        main_layout = QVBoxLayout()
+
+        # Создание полей
+        group_combo = QComboBox()
+        group_combo.addItem("ИСТ-311")
+        group_combo.addItem("ПИ-311")
+
+        subject_combo = QComboBox()
+        subject_combo.addItem("Математика")
+        subject_combo.addItem("Физика")
+        subject_combo.addItem("История России")
+
+        date_combo = QComboBox()
+        date_combo.addItem("24 мая")
+
+        self.attendance_table = QTableWidget()
+        self.attendance_table.setRowCount(10)
+        self.attendance_table.setColumnCount(4)
+        self.attendance_table.setHorizontalHeaderLabels(["Фамилия", "Имя", "Отчество", "Пропуск"])
+
+        students = [("Лиманский", "Влад", "Александрович"), ("Долгушева", "Софья", "Максимовна"),
+                    ("Каплунова", "Кристина", "Александровна")]
+        for row, student in enumerate(students):
+            for col, data in enumerate(student):
+                if col == 3:
+                    item = QTableWidgetItem()
+                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    item.setCheckState(QtCore.Qt.Unchecked)
+                else:
+                    item = QTableWidgetItem(data)
+
+                self.attendance_table.setItem(row, col, item)
+
+        mark_attendance_button = QPushButton("Отметить посещаемость")
+        add_student_button = QPushButton("Добавить студента")
+        remove_student_button = QPushButton("Удалить студента")
+        save_date = QPushButton('Сохранить')
+        save_date.clicked.connect(self.save_data)
+
+        main_layout.addWidget(group_combo)
+        main_layout.addWidget(subject_combo)
+        main_layout.addWidget(date_combo)
+        main_layout.addWidget(self.attendance_table)
+        main_layout.addWidget(mark_attendance_button)
+        main_layout.addWidget(add_student_button)
+        main_layout.addWidget(remove_student_button)
+        main_layout.addWidget(save_date)
+
+        main_widget = QWidget()
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
+
+    def save_data(self):
+        data = []
+        for row in range(self.attendance_table.rowCount()):
+            row_data = []
+            for col in range(self.attendance_table.columnCount()):
+                item = self.attendance_table.item(row, col)
+                if item is not None:
+                    if col == 3:  # Колонка "Пропуск"
+                        row_data.append(item.checkState() == QtCore.Qt.Checked)
+                    else:
+                        row_data.append(item.text())
+            data.append(row_data)
+
+        try:
+            with open("attendance.txt", "a", encoding='utf-8') as f:
+                for row_data in data:
+                    line = "\t".join(str(item) for item in row_data) + "\n"
+                    f.write(line)
+            QMessageBox.information(self, "Успех", "Данные сохранены в файл attendance.txt")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить данные: {str(e)}")
+
+if name == 'main':
+    app = QApplication(sys.argv)
+    journal_app = ElectronicJournalApp()
+    journal_app.show()
+    sys.exit(app.exec_())
+
+Aleksandr, [23.05.2024 22:13]
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QVBoxLayout, QWidget, QTabWidget, QTableWidget, \
+    QTableWidgetItem, QLabel, QPushButton, QLineEdit, QMessageBox, QComboBox
+from PyQt5 import QtCore
+
+
+class ElectronicJournalApp(QMainWindow):
+    def init(self):
+        super().init()
+
+        self.setWindowTitle("Журнал Пропусков")
+        self.setGeometry(100, 100, 800, 600)
+
+        self.initUI()
+
+    def initUI(self):
+        main_layout = QVBoxLayout()
+
+        # Создание полей
+        self.group_combo = QComboBox()
+        self.group_combo.addItem("ИСТ-311")
+        self.group_combo.addItem("ПИ-311")
+
+        self.subject_combo = QComboBox()
+        self.subject_combo.addItem("Математика")
+        self.subject_combo.addItem("Физика")
+        self.subject_combo.addItem("История России")
+
+        self.date_combo = QComboBox()
+        self.date_combo.addItem("24 мая")
+
+        self.attendance_table = QTableWidget()
+        self.attendance_table.setRowCount(10)
+        self.attendance_table.setColumnCount(4)
+        self.attendance_table.setHorizontalHeaderLabels(["Фамилия", "Имя", "Отчество", "Пропуск"])
+
+        students = [("Лиманский", "Влад", "Александрович"), ("Долгушева", "Софья", "Максимовна"),
+                    ("Каплунова", "Кристина", "Александровна")]
+        for row, student in enumerate(students):
+            for col, data in enumerate(student):
+                if col == 3:
+                    item = QTableWidgetItem()
+                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    item.setCheckState(QtCore.Qt.Unchecked)
+                else:
+                    item = QTableWidgetItem(data)
+
+                self.attendance_table.setItem(row, col, item)
+
+        mark_attendance_button = QPushButton("Отметить посещаемость")
+        add_student_button = QPushButton("Добавить студента")
+        remove_student_button = QPushButton("Удалить студента")
+        save_date = QPushButton('Сохранить')
+        save_date.clicked.connect(self.save_data)
+
+        main_layout.addWidget(self.group_combo)
+        main_layout.addWidget(self.subject_combo)
+        main_layout.addWidget(self.date_combo)
+        main_layout.addWidget(self.attendance_table)
+        main_layout.addWidget(mark_attendance_button)
+        main_layout.addWidget(add_student_button)
+        main_layout.addWidget(remove_student_button)
+        main_layout.addWidget(save_date)
+
+        main_widget = QWidget()
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
+
+    def save_data(self):
+        group = self.group_combo.currentText()
+        subject = self.subject_combo.currentText()
+        date = self.date_combo.currentText()
+        data = [f"Группа: {group}\n", f"Предмет: {subject}\n", f"Дата: {date}\n\n"]
+
+        flag = False
+
+        for row in range(self.attendance_table.rowCount()):
+            row_data = []
+            for col in range(self.attendance_table.columnCount()):
+                item = self.attendance_table.item(row, col)
+                if item is not None:
+                    row_data.append(item.text())
+                else:
+                    flag = True
+                    break
+            if flag:
+                break
+            data.append(f"{row_data[0]}\t{row_data[1]}\t{row_data[2]}\t{'Отсутствует(У)' if row_data[3] == '1' else 'Отсутствует(Н)'}\n")
+
+        try:
+            with open("attendance.txt", "a", encoding='utf-8') as f:
+                f.writelines(data)
+            QMessageBox.information(self, "Успех", "Данные сохранены в файл attendance.txt")
+        except Exception as e:
+            QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить данные: {str(e)}")
+
+
+if name == 'main':
+    app = QApplication(sys.argv)
+    journal_app = ElectronicJournalApp()
+    journal_app.show()
+    sys.exit(app.exec_())
