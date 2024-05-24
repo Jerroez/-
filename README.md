@@ -142,7 +142,7 @@
             QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить данные: {str(e)}")
 
 
-    if name == 'main':
+    if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     journal_app = ElectronicJournalApp()
